@@ -1,16 +1,3 @@
-/*
-const express = require('express');
-const router = express.Router();
-const sucursalController = require('../controllers/sucursal.controller');
-
-router.get('/', sucursalController.getSucursales);
-router.get('/:id', sucursalController.getSucursalById);
-router.post('/', sucursalController.createSucursal);
-router.put('/:id', sucursalController.updateSucursal);
-router.delete('/:id', sucursalController.deleteSucursal);
-
-module.exports = router;
-*/
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -31,4 +18,5 @@ const upload = multer({ storage });
 
 router.post('/', upload.single('sucursal_logo'), sucursalController.createSucursal);
 router.get('/', sucursalController.getSucursales);
+router.get('/:id', sucursalController.getSucursalById);
 module.exports = router;
