@@ -3,17 +3,18 @@ const pool = require('../database'); // Asegúrate de importar tu conexión a My
 const con = require('../database'); // Ajusta la ruta según tu estructura
 
 
+
 // Obtener todas las veterinarias
 exports.getVeterinarias = async (req, res) => {
-    db.query('SELECT * FROM Veterinaria', (err, results) => {
-        if (err) {
-            console.error(err);
-            res.status(500).json({ error: 'Error al obtener veterinaria' });
-        } else {
-            res.json(results);
-        }
-    });
+    try {
+        const [rows] = await pool.query("SELECT * FROM Veterinaria");
+        res.json(rows);
+    } catch (error) {
+        console.error("Error al obtener veterinarias:", error);
+        res.status(500).json({ error: "Error al obtener veterinarias" });
+    }
 };
+
 
 // Crear una nueva veterinaria
 exports.createVeterinaria = async (req, res) => {
@@ -36,56 +37,44 @@ exports.createVeterinaria = async (req, res) => {
   
 // Obtener una veterinaria por ID   
 exports.getVeterinariaById = async (req, res) => {
-    const { id } = req.params;
-    db.query('SELECT * FROM Veterinaria WHERE veterinaria_id = ?', [id], (err, result) => {
-        if (err) {
-            console.error(err);
-            res.status(500).json({ error: 'Error al obtener la veterinaria' });
-        } else {
-            res.json(result[0] || {});
+    try {
+        const { id } = req.params; // Obtiene el ID de los parámetros de la URL
+        const [rows] = await pool.query("SELECT * FROM Veterinaria WHERE veterinaria_id = ?", [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: "Veterinaria no encontrada" });
         }
-    });
+
+        res.json(rows[0]); // Devuelve solo la veterinaria encontrada
+    } catch (error) {
+        console.error("Error al obtener veterinaria por ID:", error);
+        res.status(500).json({ error: "Error al obtener veterinaria" });
+    }
 };
 
-// Actualizar una veterinaria 
-/*  
-exports.updateVeterinaria = async (req, res) => {
-    const { id } = req.params;
-    const { veterinaria_nombre, veterinaria_nit, veterinaria_direccion, veterinaria_telefono, veterinaria_estado } = req.body;
-    db.query(
-        'UPDATE Veterinaria SET veterinaria_nombre=?, veterinaria_nit=?, veterinaria_direccion=?, veterinaria_telefono=?, veterinaria_estado=? WHERE veterinaria_id=?',
-        [veterinaria_nombre, veterinaria_nit, veterinaria_direccion, veterinaria_telefono, veterinaria_estado, id],
-        (err, result) => {
-            if (err) {
-                console.error(err);
-                res.status(500).json({ error: 'Error al actualizar la veterinaria' });
-            } else {
-                res.json({ message: 'Veterinaria actualizada' });
-            }
-        }
-    );
-};
-*/
-
-
+// Actualizar una veterinaria
 exports.updateVeterinaria = async (req, res) => {
     try {
         const { id } = req.params;
-        const { veterinaria_nombre, veterinaria_nit, veterinaria_direccion, veterinaria_telefono, veterinaria_estado } = req.body;
-        
-        let veterinaria_logo = null;
-        if (req.file) {
-            veterinaria_logo = req.file.buffer; // Almacenar la imagen en formato binario
+        const { veterinaria_nombre, veterinaria_nit, veterinaria_direccion, veterinaria_telefono } = req.body;
+        const veterinaria_logo = req.file ? req.file.buffer : null; // Si hay un logo, lo convierte en buffer
+
+        let query = `UPDATE Veterinaria SET 
+            veterinaria_nombre = ?, 
+            veterinaria_nit = ?, 
+            veterinaria_direccion = ?, 
+            veterinaria_telefono = ?`;
+
+        let values = [veterinaria_nombre, veterinaria_nit, veterinaria_direccion, veterinaria_telefono];
+
+        // Si hay un logo, también lo actualiza
+        if (veterinaria_logo) {
+            query += `, veterinaria_logo = ?`;
+            values.push(veterinaria_logo);
         }
 
-        const query = `
-            UPDATE Veterinaria 
-            SET veterinaria_nombre = ?, veterinaria_nit = ?, veterinaria_direccion = ?, 
-                veterinaria_telefono = ?, veterinaria_estado = ?, veterinaria_logo = ?
-            WHERE veterinaria_id = ?
-        `;
-
-        const values = [veterinaria_nombre, veterinaria_nit, veterinaria_direccion, veterinaria_telefono, veterinaria_estado, veterinaria_logo, id];
+        query += ` WHERE veterinaria_id = ?`;
+        values.push(id);
 
         const [result] = await pool.query(query, values);
 
@@ -93,13 +82,14 @@ exports.updateVeterinaria = async (req, res) => {
             return res.status(404).json({ message: "Veterinaria no encontrada" });
         }
 
-        res.status(200).json({ message: "Veterinaria actualizada correctamente" });
+        res.json({ message: "Veterinaria actualizada con éxito" });
 
     } catch (error) {
-        console.error("Error al actualizar la veterinaria:", error);
-        res.status(500).json({ message: "Error interno del servidor" });
+        console.error("Error al actualizar veterinaria:", error);
+        res.status(500).json({ error: "Error interno del servidor" });
     }
 };
+
 
 
 // Eliminar una veterinaria

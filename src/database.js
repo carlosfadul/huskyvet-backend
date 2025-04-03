@@ -1,4 +1,5 @@
 const mysql = require('mysql2/promise');
+const mysql2 = require('mysql2');
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
@@ -21,3 +22,5 @@ pool.getConnection((err, connection) => {
 });
 
 module.exports = pool;
+
+
