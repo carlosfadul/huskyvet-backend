@@ -29,9 +29,15 @@ const facturaRoutes = require('./routes/factura.routes');
 const facturaDetalleRoutes = require('./routes/facturaDetalle.routes');
 const pedidoRoutes = require('./routes/pedido.routes');
 const detallePedidoRoutes = require('./routes/detallePedido.routes');
-
-
-
+const ventaRoutes = require('./routes/venta.routes');
+const detalleVentaRoutes = require('./routes/detalleVenta.routes');
+const atencionRoutes = require('./routes/atencion.routes');
+const detalleAtencionRoutes = require('./routes/detalleAtencion.routes');
+const mascotaTratamientoRoutes = require('./routes/mascotaTratamiento.routes');
+const aplicacionVacunaRoutes = require('./routes/aplicacionVacuna.routes');
+const remisionRoutes = require('./routes/remision.routes');
+const detalleRemisionRoutes = require('./routes/detalleRemision.routes');
+const detalleNominaRoutes = require('./routes/detalleNomina.routes');
 
 
 const app = express();
@@ -68,7 +74,15 @@ app.use('/api/facturas', facturaRoutes);
 app.use('/api/factura-detalle', facturaDetalleRoutes);
 app.use('/api/pedidos', pedidoRoutes);
 app.use('/api/detalle-pedido', detallePedidoRoutes);
-
+app.use('/api/ventas', ventaRoutes);
+app.use('/api/detalle-venta', detalleVentaRoutes);
+app.use('/api/atenciones', atencionRoutes);
+app.use('/api/detalle-atencion', detalleAtencionRoutes);
+app.use('/api/mascota-tratamiento', mascotaTratamientoRoutes);
+app.use('/api/aplicacion-vacuna', aplicacionVacunaRoutes);
+app.use('/api/remisiones', remisionRoutes);
+app.use('/api/detalle-remision', detalleRemisionRoutes);
+app.use('/api/detalle-nomina', detalleNominaRoutes);
 
 
 app.get('/', (req, res) => {
