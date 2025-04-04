@@ -1,15 +1,16 @@
 const db = require('../database');
+const pool = require('../database'); // Asegúrate de importar tu conexión a MySQL
+const con = require('../database'); // Ajusta la ruta según tu estructura
 
 // Obtener todas las vacunas
-exports.getVacunas = (req, res) => {
-    db.query('SELECT * FROM Vacuna', (err, results) => {
-        if (err) {
-            console.error(err);
-            res.status(500).json({ error: 'Error al obtener vacunas' });
-        } else {
-            res.json(results);
-        }
-    });
+exports.getVacunas = async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT * FROM Vacuna');
+        res.json(rows);
+    } catch (error) {
+        console.error('Error al obtener vacunas:', error);
+        res.status(500).json({ message: 'Error al obtener vacunas' });
+    }
 };
 
 // Crear una nueva vacuna
