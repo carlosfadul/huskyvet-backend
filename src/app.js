@@ -15,6 +15,24 @@ const clienteRoutes = require('./routes/cliente.routes');
 const mascotaRoutes = require('./routes/mascota.routes');
 const productoRoutes = require('./routes/producto.routes');
 const mascotaEnfermedadRoutes = require('./routes/mascotaEnfermedad.routes');
+const desparasitanteRoutes = require('./routes/desparasitante.routes');
+const aplicacionDesparasitanteRoutes = require('./routes/aplicacionDesparasitante.routes');
+const servicioAliadoRoutes = require('./routes/servicioAliado.routes');
+const empleadoRoutes = require('./routes/empleado.routes');
+const nominaRoutes = require('./routes/nomina.routes');
+const usuarioRoutes = require('./routes/usuario.routes');
+const citaRoutes = require('./routes/cita.routes');
+const configuracionRoutes = require('./routes/configuracion.routes');
+const auditoriaRoutes = require('./routes/auditoria.routes');
+const movimientoInventarioRoutes = require('./routes/movimientoInventario.routes');
+const facturaRoutes = require('./routes/factura.routes');
+const facturaDetalleRoutes = require('./routes/facturaDetalle.routes');
+const pedidoRoutes = require('./routes/pedido.routes');
+const detallePedidoRoutes = require('./routes/detallePedido.routes');
+
+
+
+
 
 const app = express();
 app.use(cors());
@@ -36,6 +54,21 @@ app.use('/api/clientes', clienteRoutes);
 app.use('/api/mascotas', mascotaRoutes);
 app.use('/api/productos', productoRoutes);
 app.use('/api/mascota-enfermedad', mascotaEnfermedadRoutes);
+app.use('/api/desparasitantes', desparasitanteRoutes);
+app.use('/api/aplicacion-desparasitante', aplicacionDesparasitanteRoutes);
+app.use('/api/servicio-aliado', servicioAliadoRoutes);
+app.use('/api/empleados', empleadoRoutes);
+app.use('/api/nomina', nominaRoutes);
+app.use('/api/usuarios', usuarioRoutes);
+app.use('/api/citas', citaRoutes);
+app.use('/api/configuracion', configuracionRoutes);
+app.use('/api/auditoria', auditoriaRoutes);
+app.use('/api/movimiento-inventario', movimientoInventarioRoutes);
+app.use('/api/facturas', facturaRoutes);
+app.use('/api/factura-detalle', facturaDetalleRoutes);
+app.use('/api/pedidos', pedidoRoutes);
+app.use('/api/detalle-pedido', detallePedidoRoutes);
+
 
 
 app.get('/', (req, res) => {
