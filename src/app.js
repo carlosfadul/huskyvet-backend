@@ -38,6 +38,8 @@ const aplicacionVacunaRoutes = require('./routes/aplicacionVacuna.routes');
 const remisionRoutes = require('./routes/remision.routes');
 const detalleRemisionRoutes = require('./routes/detalleRemision.routes');
 const detalleNominaRoutes = require('./routes/detalleNomina.routes');
+const authRoutes = require('./routes/auth.routes');
+
 
 
 const app = express();
@@ -83,6 +85,7 @@ app.use('/api/aplicacion-vacuna', aplicacionVacunaRoutes);
 app.use('/api/remisiones', remisionRoutes);
 app.use('/api/detalle-remision', detalleRemisionRoutes);
 app.use('/api/detalle-nomina', detalleNominaRoutes);
+app.use('/api/auth', authRoutes); // Ruta de autenticación
 
 
 app.get('/', (req, res) => {

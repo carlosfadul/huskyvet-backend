@@ -1,4 +1,6 @@
 const db = require('../database');
+const bcrypt = require('bcrypt');
+
 
 // Obtener todos los usuarios
 exports.getUsuarios = async (req, res) => {
@@ -42,10 +44,23 @@ exports.createUsuario = async (req, res) => {
     const usuario_foto = req.file ? req.file.buffer : null;
 
     try {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(usuario_password, salt);
+
         const [result] = await db.promise().query(
             `INSERT INTO Usuario (empleado_id, sucursal_id, veterinaria_id, usuario_username, usuario_password, usuario_tipo, usuario_estado, usuario_foto, ultimo_login)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [empleado_id || null, sucursal_id || null, veterinaria_id || null, usuario_username, usuario_password, usuario_tipo, usuario_estado || 'activo', usuario_foto, ultimo_login || null]
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                empleado_id || null,
+                sucursal_id || null,
+                veterinaria_id || null,
+                usuario_username,
+                hashedPassword, // Usamos el hash aquí
+                usuario_tipo,
+                usuario_estado || 'activo',
+                usuario_foto,
+                ultimo_login || null
+            ]
         );
         res.status(201).json({ message: 'Usuario creado', usuario_id: result.insertId });
     } catch (error) {
@@ -93,3 +108,5 @@ exports.deleteUsuario = async (req, res) => {
         res.status(500).json({ error: 'Error al eliminar usuario' });
     }
 };
+
+
