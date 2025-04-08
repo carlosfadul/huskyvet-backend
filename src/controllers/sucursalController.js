@@ -101,32 +101,46 @@ exports.updateSucursal = async (req, res) => {
     }
 };
 
+
 // Eliminar una sucursal
 exports.deleteSucursal = async (req, res) => {
-    const { id } = req.params;
-    db.query('DELETE FROM Sucursal WHERE sucursal_id = ?', [id], (err, result) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ error: 'Error al eliminar la sucursal' });
-        } else {
-            res.json({ message: 'Sucursal eliminada con éxito' });
-        }
-    });
-};
+    try {
+      const { id } = req.params;
+      const [result] = await pool.query('DELETE FROM Sucursal WHERE sucursal_id = ?', [id]);
+  
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: 'Sucursal no encontrada' });
+      }
+  
+      res.json({ message: 'Sucursal eliminada con éxito' });
+    } catch (error) {
+      console.error('Error al eliminar la sucursal:', error);
+      res.status(500).json({ message: 'Error al eliminar la sucursal', error });
+    }
+  };
+  
 
 
 // Obtener el logo de una sucursal
 exports.getSucursalLogo = async (req, res) => {
     try {
-        const { id } = req.params;
-        const [rows] = await pool.promise().query('SELECT sucursal_logo FROM Sucursal WHERE sucursal_id = ?', [id]);
-        if (rows.length === 0 || !rows[0].sucursal_logo) return res.status(404).json({ message: 'Logo no encontrado' });
-
-        res.setHeader('Content-Type', 'image/png');
-        res.send(rows[0].sucursal_logo);
+      const { id } = req.params;
+      const [rows] = await pool.query(
+        'SELECT sucursal_logo FROM Sucursal WHERE sucursal_id = ?',
+        [id]
+      );
+  
+      if (rows.length === 0 || !rows[0].sucursal_logo) {
+        return res.status(404).send('Logo no encontrado');
+      }
+  
+      res.setHeader('Content-Type', 'image/png');
+      res.send(rows[0].sucursal_logo);
     } catch (error) {
-        res.status(500).json({ message: 'Error al obtener el logo', error });
+      console.error('Error al obtener el logo de la sucursal:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
-};
+  };
+  
 
 

@@ -98,3 +98,21 @@ exports.deleteVeterinaria = async (req, res) => {
     }
   };
   
+  // Obtener el logo de una veterinaria
+exports.getLogo = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const [rows] = await pool.query("SELECT veterinaria_logo FROM Veterinaria WHERE veterinaria_id = ?", [id]);
+  
+      if (rows.length === 0 || !rows[0].veterinaria_logo) {
+        return res.status(404).send('Logo no encontrado');
+      }
+  
+      res.set('Content-Type', 'image/png'); // o 'image/jpeg' según el tipo
+      res.send(rows[0].veterinaria_logo);
+    } catch (error) {
+      console.error("Error al obtener el logo:", error);
+      res.status(500).json({ error: "Error interno al obtener el logo" });
+    }
+  };
+  

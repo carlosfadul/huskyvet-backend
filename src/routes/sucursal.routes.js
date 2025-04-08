@@ -5,6 +5,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 const sucursalController = require('../controllers/sucursalController');
 
+
 // Crear sucursal con logo
 router.post('/', upload.single('sucursal_logo'), sucursalController.createSucursal);
 
@@ -23,5 +24,8 @@ router.put('/:id', upload.single('sucursal_logo'), sucursalController.updateSucu
 
 // Eliminar sucursal
 router.delete('/:id', sucursalController.deleteSucursal);
+
+// Ruta para obtener el logo de una sucursal
+router.get('/:id/logo', sucursalController.getSucursalLogo);
 
 module.exports = router;

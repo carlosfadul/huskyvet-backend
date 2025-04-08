@@ -18,6 +18,8 @@ router.delete('/:id', veterinariaController.deleteVeterinaria);
 router.post('/', upload.single('veterinaria_logo'), controller.createVeterinaria);
 // Actualizar con logo
 router.put('/:id', upload.single('veterinaria_logo'), controller.updateVeterinaria);
+router.get('/:id/logo', veterinariaController.getLogo);
+
 
 module.exports = router;
 

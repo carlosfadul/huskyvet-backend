@@ -42,6 +42,7 @@ const authRoutes = require('./routes/auth.routes');
 
 
 
+
 const app = express();
 app.use(cors());
 
@@ -90,6 +91,7 @@ app.use('/api/remisiones', remisionRoutes);
 app.use('/api/detalle-remision', detalleRemisionRoutes);
 app.use('/api/detalle-nomina', detalleNominaRoutes);
 app.use('/api/auth', authRoutes); // Ruta de autenticación
+
 
 
 app.get('/', (req, res) => {
