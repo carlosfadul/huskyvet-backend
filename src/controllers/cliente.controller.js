@@ -1,4 +1,6 @@
 const db = require('../database');
+const pool = require('../database');
+
 
 // Crear nuevo cliente
 exports.createCliente = async (req, res) => {
@@ -128,3 +130,21 @@ exports.deleteCliente = async (req, res) => {
         res.status(500).json({ message: 'Error al eliminar el cliente' });
     }
 };
+
+// Obtener clientes por sucursal
+exports.getClientesBySucursal = async (req, res) => {
+    const { sucursal_id } = req.params;
+  
+    try {
+      const [rows] = await pool.query(
+        'SELECT * FROM Cliente WHERE sucursal_id = ?',
+        [sucursal_id]
+      );
+      res.json(rows);
+    } catch (error) {
+      console.error("Error al obtener clientes por sucursal:", error);
+      res.status(500).json({ message: 'Error al obtener los clientes', error });
+    }
+  };
+  
+  
