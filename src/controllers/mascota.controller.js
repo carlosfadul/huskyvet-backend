@@ -1,4 +1,5 @@
 const db = require('../database');
+const pool = require('../database');
 
 // Crear nueva mascota
 exports.createMascota = async (req, res) => {
@@ -114,3 +115,57 @@ exports.deleteMascota = async (req, res) => {
         res.status(500).json({ message: 'Error al eliminar la mascota' });
     }
 };
+
+exports.getMascotasPorCliente = async (req, res) => {
+    const { clienteId } = req.params;
+    try {
+      const [rows] = await pool.query(`
+        SELECT 
+          m.*, 
+          c.cliente_cedula, 
+          c.cliente_nombre, 
+          c.cliente_apellido
+        FROM Mascota m
+        JOIN Cliente c ON m.cliente_id = c.cliente_id
+        WHERE m.cliente_id = ?
+      `, [clienteId]);
+  
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener mascotas por cliente:', error);
+      res.status(500).json({ error: 'Error al obtener mascotas' });
+    }
+  };
+  
+  exports.getFotoMascota = async (req, res) => {
+    try {
+      const [rows] = await pool.query('SELECT mascota_foto FROM Mascota WHERE mascota_id = ?', [req.params.id]);
+      if (rows.length === 0 || !rows[0].mascota_foto) {
+        return res.status(404).send('Foto no encontrada');
+      }
+  
+      res.setHeader('Content-Type', 'image/jpeg'); // o image/png
+      res.send(rows[0].mascota_foto);
+    } catch (error) {
+      console.error('Error al obtener foto:', error);
+      res.status(500).send('Error al obtener la foto');
+    }
+  };
+  
+  exports.getMascotasPorSucursal = async (req, res) => {
+    const { sucursalId } = req.params;
+    try {
+      const [rows] = await pool.query(
+        `SELECT m.*, c.cliente_nombre, c.cliente_apellido, c.cliente_cedula
+         FROM Mascota m
+         JOIN Cliente c ON m.cliente_id = c.cliente_id
+         WHERE c.sucursal_id = ?`,
+        [sucursalId]
+      );
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener mascotas por sucursal:', error);
+      res.status(500).json({ error: 'Error al obtener mascotas' });
+    }
+  };
+  
