@@ -4,16 +4,26 @@ const con = require('../database');
 
 
 
-// Obtener todas las sucursales
 exports.getSucursales = async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT sucursal_id, veterinaria_id, sucursal_nombre, sucursal_direccion, sucursal_telefono, sucursal_nit, sucursal_estado, fecha_creacion FROM Sucursal');
-        res.json(rows);
+      const { veterinaria_id } = req.query;
+  
+      let query = 'SELECT * FROM Sucursal';
+      let values = [];
+  
+      if (veterinaria_id) {
+        query += ' WHERE veterinaria_id = ?';
+        values.push(veterinaria_id);
+      }
+  
+      const [rows] = await pool.query(query, values);
+      res.json(rows);
     } catch (error) {
-        console.error("Error al obtener sucursales:", error);
-        res.status(500).json({ message: 'Error al obtener sucursales', error });
+      console.error("Error al obtener sucursales:", error);
+      res.status(500).json({ message: 'Error al obtener sucursales', error });
     }
-};
+  };
+  
 
 
 // Crear una nueva sucursal
