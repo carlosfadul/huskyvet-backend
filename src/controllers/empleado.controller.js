@@ -164,3 +164,23 @@ exports.deleteEmpleado = async (req, res) => {
     res.status(500).json({ error: 'Error al eliminar empleado' });
   }
 };
+
+// Obtener empleados sin usuario por sucursal
+exports.getEmpleadosSinUsuarioPorSucursal = async (req, res) => {
+  const { sucursalId } = req.params;
+  try {
+    const [rows] = await db.query(`
+      SELECT e.empleado_id, e.empleado_nombre, e.empleado_apellido, e.empleado_cedula
+      FROM Empleado e
+      LEFT JOIN Usuario u ON e.empleado_id = u.empleado_id
+      WHERE u.usuario_id IS NULL AND e.sucursal_id = ?
+    `, [sucursalId]);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error al obtener empleados sin usuario:', error);
+    res.status(500).json({ error: 'Error al obtener empleados sin usuario' });
+  }
+};
+
+
+

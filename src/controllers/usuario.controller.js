@@ -2,17 +2,15 @@ const db = require('../database');
 const bcrypt = require('bcrypt');
 
 // Obtener todos los usuarios (con imagen base64)
-exports.getUsuarios = async (req, res) => {
+const getUsuarios = async (req, res) => {
     try {
         const [rows] = await db.query('SELECT * FROM Usuario');
-
         const usuarios = rows.map(usuario => ({
             ...usuario,
             usuario_foto: usuario.usuario_foto
                 ? `data:image/jpeg;base64,${usuario.usuario_foto.toString('base64')}`
                 : null
         }));
-
         res.json(usuarios);
     } catch (error) {
         console.error('Error al obtener usuarios:', error);
@@ -21,7 +19,7 @@ exports.getUsuarios = async (req, res) => {
 };
 
 // Obtener usuario por ID
-exports.getUsuarioById = async (req, res) => {
+const getUsuarioById = async (req, res) => {
     const { id } = req.params;
     try {
         const [rows] = await db.query('SELECT * FROM Usuario WHERE usuario_id = ?', [id]);
@@ -42,7 +40,7 @@ exports.getUsuarioById = async (req, res) => {
 };
 
 // Crear usuario
-exports.createUsuario = async (req, res) => {
+const createUsuario = async (req, res) => {
     const {
         empleado_id,
         sucursal_id,
@@ -83,7 +81,7 @@ exports.createUsuario = async (req, res) => {
 };
 
 // Actualizar usuario
-exports.updateUsuario = async (req, res) => {
+const updateUsuario = async (req, res) => {
     const { id } = req.params;
     const {
         empleado_id,
@@ -103,7 +101,7 @@ exports.updateUsuario = async (req, res) => {
             ? await bcrypt.hash(usuario_password, 10)
             : null;
 
-        const [result] = await db.query(
+        await db.query(
             `UPDATE Usuario 
              SET empleado_id = ?, sucursal_id = ?, veterinaria_id = ?, usuario_username = ?, 
                  usuario_password = IFNULL(?, usuario_password), usuario_tipo = ?, 
@@ -130,7 +128,7 @@ exports.updateUsuario = async (req, res) => {
 };
 
 // Eliminar usuario
-exports.deleteUsuario = async (req, res) => {
+const deleteUsuario = async (req, res) => {
     const { id } = req.params;
     try {
         await db.query('DELETE FROM Usuario WHERE usuario_id = ?', [id]);
@@ -141,5 +139,33 @@ exports.deleteUsuario = async (req, res) => {
     }
 };
 
+// Obtener usuarios por sucursal
+const getUsuariosPorSucursal = async (req, res) => {
+    const { sucursalId } = req.params;
+    try {
+        const [rows] = await db.query('SELECT * FROM Usuario WHERE sucursal_id = ?', [sucursalId]);
+        const usuarios = rows.map(usuario => ({
+            ...usuario,
+            usuario_foto: usuario.usuario_foto
+                ? `data:image/jpeg;base64,${usuario.usuario_foto.toString('base64')}`
+                : null
+        }));
+        res.json(usuarios);
+    } catch (error) {
+        console.error('Error al obtener usuarios por sucursal:', error);
+        res.status(500).json({ error: 'Error al obtener usuarios por sucursal' });
+    }
+};
 
+// Exportar
+module.exports = {
+    getUsuarios,
+    getUsuarioById,
+    createUsuario,
+    updateUsuario,
+    deleteUsuario,
+    getUsuariosPorSucursal
+};
+
+  
 
