@@ -55,6 +55,16 @@ const createUsuario = async (req, res) => {
     const usuario_foto = req.file ? req.file.buffer : null;
 
     try {
+        // Verificar si ya existe un usuario con el mismo username
+        const [existing] = await db.query(
+            'SELECT usuario_id FROM Usuario WHERE usuario_username = ?',
+            [usuario_username]
+        );
+
+        if (existing.length > 0) {
+            return res.status(400).json({ error: 'El nombre de usuario ya existe' });
+        }
+
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(usuario_password, salt);
 
@@ -80,6 +90,7 @@ const createUsuario = async (req, res) => {
     }
 };
 
+
 // Actualizar usuario
 const updateUsuario = async (req, res) => {
     const { id } = req.params;
@@ -97,11 +108,21 @@ const updateUsuario = async (req, res) => {
     const usuario_foto = req.file ? req.file.buffer : null;
 
     try {
+        // Verificar si otro usuario tiene el mismo username
+        const [existing] = await db.query(
+            'SELECT usuario_id FROM Usuario WHERE usuario_username = ? AND usuario_id != ?',
+            [usuario_username, id]
+        );
+
+        if (existing.length > 0) {
+            return res.status(400).json({ error: 'El nombre de usuario ya está en uso por otro usuario' });
+        }
+
         const passwordToUpdate = usuario_password
             ? await bcrypt.hash(usuario_password, 10)
             : null;
 
-        await db.query(
+        const [result] = await db.query(
             `UPDATE Usuario 
              SET empleado_id = ?, sucursal_id = ?, veterinaria_id = ?, usuario_username = ?, 
                  usuario_password = IFNULL(?, usuario_password), usuario_tipo = ?, 
@@ -126,6 +147,7 @@ const updateUsuario = async (req, res) => {
         res.status(500).json({ error: 'Error al actualizar usuario' });
     }
 };
+
 
 // Eliminar usuario
 const deleteUsuario = async (req, res) => {
