@@ -1,31 +1,33 @@
 const db = require('../database');
 
-exports.getEnfermedades = async (req, res) => {
+// Obtener todas las enfermedades
+const getEnfermedades = async (req, res) => {
   try {
     const [rows] = await db.query('SELECT * FROM Enfermedad');
     res.json(rows);
-  } catch (err) {
-    console.error('Error al obtener enfermedades:', err);
-    res.status(500).json({ message: 'Error al obtener enfermedades' });
+  } catch (error) {
+    console.error('Error al obtener enfermedades:', error);
+    res.status(500).json({ error: 'Error al obtener enfermedades' });
   }
 };
 
-exports.getEnfermedadById = async (req, res) => {
+// Obtener una enfermedad por ID
+const getEnfermedadById = async (req, res) => {
   const { id } = req.params;
   try {
     const [rows] = await db.query('SELECT * FROM Enfermedad WHERE enfermedad_id = ?', [id]);
-    if (rows.length === 0) {
-      return res.status(404).json({ message: 'Enfermedad no encontrada' });
-    }
+    if (rows.length === 0) return res.status(404).json({ message: 'Enfermedad no encontrada' });
     res.json(rows[0]);
-  } catch (err) {
-    console.error('Error al obtener enfermedad:', err);
-    res.status(500).json({ message: 'Error al obtener enfermedad' });
+  } catch (error) {
+    console.error('Error al obtener la enfermedad:', error);
+    res.status(500).json({ error: 'Error al obtener la enfermedad' });
   }
 };
 
-exports.createEnfermedad = async (req, res) => {
+// Crear una enfermedad
+const createEnfermedad = async (req, res) => {
   const { nombre_enfermedad, descripcion_enfermedad, categoria, especie_afectada } = req.body;
+
   try {
     const [result] = await db.query(
       `INSERT INTO Enfermedad (nombre_enfermedad, descripcion_enfermedad, categoria, especie_afectada)
@@ -33,35 +35,46 @@ exports.createEnfermedad = async (req, res) => {
       [nombre_enfermedad, descripcion_enfermedad, categoria, especie_afectada]
     );
     res.status(201).json({ message: 'Enfermedad creada', enfermedad_id: result.insertId });
-  } catch (err) {
-    console.error('Error al crear enfermedad:', err);
-    res.status(500).json({ message: 'Error al crear enfermedad' });
+  } catch (error) {
+    console.error('Error al crear enfermedad:', error);
+    res.status(500).json({ error: 'Error al crear enfermedad' });
   }
 };
 
-exports.updateEnfermedad = async (req, res) => {
+// Actualizar enfermedad
+const updateEnfermedad = async (req, res) => {
   const { id } = req.params;
   const { nombre_enfermedad, descripcion_enfermedad, categoria, especie_afectada } = req.body;
+
   try {
-    const [result] = await db.query(
+    await db.query(
       `UPDATE Enfermedad SET nombre_enfermedad = ?, descripcion_enfermedad = ?, categoria = ?, especie_afectada = ?
        WHERE enfermedad_id = ?`,
       [nombre_enfermedad, descripcion_enfermedad, categoria, especie_afectada, id]
     );
     res.json({ message: 'Enfermedad actualizada' });
-  } catch (err) {
-    console.error('Error al actualizar enfermedad:', err);
-    res.status(500).json({ message: 'Error al actualizar enfermedad' });
+  } catch (error) {
+    console.error('Error al actualizar enfermedad:', error);
+    res.status(500).json({ error: 'Error al actualizar enfermedad' });
   }
 };
 
-exports.deleteEnfermedad = async (req, res) => {
+// Eliminar enfermedad
+const deleteEnfermedad = async (req, res) => {
   const { id } = req.params;
   try {
     await db.query('DELETE FROM Enfermedad WHERE enfermedad_id = ?', [id]);
     res.json({ message: 'Enfermedad eliminada' });
-  } catch (err) {
-    console.error('Error al eliminar enfermedad:', err);
-    res.status(500).json({ message: 'Error al eliminar enfermedad' });
+  } catch (error) {
+    console.error('Error al eliminar enfermedad:', error);
+    res.status(500).json({ error: 'Error al eliminar enfermedad' });
   }
+};
+
+module.exports = {
+  getEnfermedades,
+  getEnfermedadById,
+  createEnfermedad,
+  updateEnfermedad,
+  deleteEnfermedad
 };
