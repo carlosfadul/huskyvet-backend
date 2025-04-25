@@ -1,3 +1,4 @@
+// src/routes/nomina.routes.js
 const express = require('express');
 const router = express.Router();
 const nominaController = require('../controllers/nomina.controller');
@@ -7,6 +8,9 @@ router.post('/', nominaController.createNomina);
 
 // Obtener todas las nóminas
 router.get('/', nominaController.getAllNominas);
+
+// Obtener nóminas por sucursal (⚠️ importante que esté antes del getById)
+router.get('/sucursal/:sucursalId', nominaController.getNominasPorSucursal);
 
 // Obtener nómina por ID
 router.get('/:id', nominaController.getNominaById);
