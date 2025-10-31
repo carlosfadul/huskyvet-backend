@@ -1,8 +1,33 @@
+// src/app.js
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
-const db = require('./database');
+const path = require('path');
 
+// ====== Cargar DB con fallback de ruta ======
+let db;
+try {
+  db = require('../database'); // raíz del proyecto
+} catch (e1) {
+  try {
+    db = require('./database'); // dentro de src/
+  } catch (e2) {
+    console.error('[DB] No se pudo cargar database.js desde ../database ni ./database');
+    throw e2;
+  }
+}
+
+// ====== Swagger ======
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+let swaggerSpec = {};
+try {
+  swaggerSpec = YAML.load(path.join(__dirname, 'docs', 'swagger.yaml'));
+} catch (e) {
+  console.warn('[Swagger] No se encontró src/docs/swagger.yaml. /api/docs mostrará vacío.');
+}
+
+// ====== Importación de rutas ======
 const vacunaRoutes = require('./routes/vacuna.routes');
 const veterinariaRoutes = require('./routes/veterinaria.routes');
 const sucursalRoutes = require('./routes/sucursal.routes');
@@ -40,62 +65,109 @@ const detalleRemisionRoutes = require('./routes/detalleRemision.routes');
 const detalleNominaRoutes = require('./routes/detalleNomina.routes');
 const authRoutes = require('./routes/auth.routes');
 
+// Controlador para detalles de nómina (ruta espejo)
+const detalleNominaController = require('./controllers/detalleNomina.controller');
+const { idParam } = require('./validators/detalleNomina.validators');
 
-
-
+// ====== Crear app ======
 const app = express();
-app.use(cors());
 
-app.use(express.json({ limit: '50mb' })); 
+// ====== Middlewares base ======
+app.use(cors());
+app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+// No-cache global
 app.use((req, res, next) => {
-    res.set('Cache-Control', 'no-store');
-    next();
+  res.set('Cache-Control', 'no-store');
+  next();
+});
+
+// Estáticos
+app.use('/public', express.static(path.join(__dirname, '..', 'public')));
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+
+// Prefijo común
+const API = '/api';
+
+// ====== Swagger ======
+if (swaggerSpec && Object.keys(swaggerSpec).length) {
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
+} else {
+  app.get('/api/docs', (_req, res) =>
+    res.send('Swagger no configurado: asegúrate de tener src/docs/swagger.yaml')
+  );
+}
+
+// ====== Rutas principales ======
+app.use(`${API}/vacunas`, vacunaRoutes);
+app.use(`${API}/veterinarias`, veterinariaRoutes);
+app.use(`${API}/sucursales`, sucursalRoutes);
+app.use(`${API}/proveedores`, proveedorRoutes);
+app.use(`${API}/servicios`, servicioRoutes);
+app.use(`${API}/enfermedades`, enfermedadRoutes);
+app.use(`${API}/tratamientos`, tratamientoRoutes);
+app.use(`${API}/aliados`, aliadoRoutes);
+app.use(`${API}/clientes`, clienteRoutes);
+app.use(`${API}/mascotas`, mascotaRoutes);
+app.use(`${API}/productos`, productoRoutes);
+app.use(`${API}/mascota-enfermedad`, mascotaEnfermedadRoutes);
+app.use(`${API}/desparasitantes`, desparasitanteRoutes);
+app.use(`${API}/aplicacion-desparasitante`, aplicacionDesparasitanteRoutes);
+app.use(`${API}/servicio-aliado`, servicioAliadoRoutes);
+app.use(`${API}/empleados`, empleadoRoutes);
+app.use(`${API}/nomina`, nominaRoutes);
+app.use(`${API}/usuarios`, usuarioRoutes);
+app.use(`${API}/citas`, citaRoutes);
+app.use(`${API}/configuracion`, configuracionRoutes);
+app.use(`${API}/auditoria`, auditoriaRoutes);
+app.use(`${API}/movimiento-inventario`, movimientoInventarioRoutes);
+app.use(`${API}/facturas`, facturaRoutes);
+app.use(`${API}/factura-detalle`, facturaDetalleRoutes);
+app.use(`${API}/pedidos`, pedidoRoutes);
+app.use(`${API}/detalle-pedido`, detallePedidoRoutes);
+app.use(`${API}/ventas`, ventaRoutes);
+app.use(`${API}/detalle-venta`, detalleVentaRoutes);
+app.use(`${API}/atenciones`, atencionRoutes);
+app.use(`${API}/detalle-atencion`, detalleAtencionRoutes);
+app.use(`${API}/mascota-tratamiento`, mascotaTratamientoRoutes);
+app.use(`${API}/aplicacion-vacuna`, aplicacionVacunaRoutes);
+app.use(`${API}/remisiones`, remisionRoutes);
+app.use(`${API}/detalle-remision`, detalleRemisionRoutes);
+
+// ====== Detalle Nómina ======
+app.use(`${API}/detalle-nomina`, detalleNominaRoutes);
+
+// 🔹 Ruta espejo requerida por el frontend Angular
+app.get(`${API}/nominas/:nominaId/detalles`, idParam('nominaId'), detalleNominaController.listByNomina);
+
+// ====== Auth ======
+app.use(`${API}/auth`, authRoutes);
+
+// ====== Healthcheck ======
+app.get(`${API}/health`, (_req, res) => {
+  res.json({ status: 'ok', service: 'huskyvet-backend', time: new Date().toISOString() });
+});
+
+// ====== Raíz ======
+app.get('/', (_req, res) => {
+  res.send('API funcionando 🚀');
+});
+
+// ====== 404 ======
+app.use((req, res, next) => {
+  const err = new Error(`No encontrado: ${req.method} ${req.originalUrl}`);
+  err.status = 404;
+  next(err);
+});
+
+// ====== Manejo de errores global ======
+app.use((err, req, res, _next) => {
+  console.error('[ERROR]', err);
+  res.status(err.status || 500).json({
+    message: err.message || 'Error interno del servidor',
+    ...(err.details ? { errors: err.details } : {}),
   });
-  
-// Rutas
-app.use('/api/vacunas', vacunaRoutes);
-app.use('/api/veterinarias', veterinariaRoutes);
-app.use('/api/sucursales', sucursalRoutes);
-app.use('/api/proveedores', proveedorRoutes);
-app.use('/api/servicios', servicioRoutes);
-app.use('/api/enfermedades', enfermedadRoutes);
-app.use('/api/tratamientos', tratamientoRoutes);
-app.use('/api/aliados', aliadoRoutes);
-app.use('/api/clientes', clienteRoutes);
-app.use('/api/mascotas', mascotaRoutes);
-app.use('/api/productos', productoRoutes);
-app.use('/api/mascota-enfermedad', mascotaEnfermedadRoutes);
-app.use('/api/desparasitantes', desparasitanteRoutes);
-app.use('/api/aplicacion-desparasitante', aplicacionDesparasitanteRoutes);
-app.use('/api/servicio-aliado', servicioAliadoRoutes);
-app.use('/api/empleados', empleadoRoutes);
-app.use('/api/nomina', nominaRoutes);
-app.use('/api/usuarios', usuarioRoutes);
-app.use('/api/citas', citaRoutes);
-app.use('/api/configuracion', configuracionRoutes);
-app.use('/api/auditoria', auditoriaRoutes);
-app.use('/api/movimiento-inventario', movimientoInventarioRoutes);
-app.use('/api/facturas', facturaRoutes);
-app.use('/api/factura-detalle', facturaDetalleRoutes);
-app.use('/api/pedidos', pedidoRoutes);
-app.use('/api/detalle-pedido', detallePedidoRoutes);
-app.use('/api/ventas', ventaRoutes);
-app.use('/api/detalle-venta', detalleVentaRoutes);
-app.use('/api/atenciones', atencionRoutes);
-app.use('/api/detalle-atencion', detalleAtencionRoutes);
-app.use('/api/mascota-tratamiento', mascotaTratamientoRoutes);
-app.use('/api/aplicacion-vacuna', aplicacionVacunaRoutes);
-app.use('/api/remisiones', remisionRoutes);
-app.use('/api/detalle-remision', detalleRemisionRoutes);
-app.use('/api/detalle-nomina', detalleNominaRoutes);
-app.use('/api/auth', authRoutes); // Ruta de autenticación
-
-
-
-app.get('/', (req, res) => {
-    res.send('API funcionando 🚀');
 });
 
 module.exports = app;

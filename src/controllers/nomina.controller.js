@@ -1,17 +1,22 @@
 // src/controllers/nomina.controller.js
-const pool = require('../database'); // Usamos el nombre "pool" para dejar claro que es mysql2/promise
+const pool = require('../database');
 
-// Función para formatear fechas a YYYY-MM-DD
+// 🗓️ Función para formatear fechas a YYYY-MM-DD
 function formatDate(fecha) {
   if (!fecha) return null;
   const d = new Date(fecha);
   return d.toISOString().split('T')[0];
 }
 
-// ✅ Versión con async/await para consultas modernas
-exports.getAllNominas = async (req, res) => {
+// ✅ Obtener todas las nóminas
+exports.getAllNominas = async (_req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM Nomina');
+    const [rows] = await pool.query(`
+      SELECT n.*, s.sucursal_nombre
+      FROM Nomina n
+      JOIN Sucursal s ON s.sucursal_id = n.sucursal_id
+      ORDER BY n.nomina_id DESC
+    `);
     res.status(200).json(rows);
   } catch (err) {
     console.error('Error al obtener las nóminas:', err);
@@ -19,10 +24,18 @@ exports.getAllNominas = async (req, res) => {
   }
 };
 
+// ✅ Obtener nómina por ID
 exports.getNominaById = async (req, res) => {
   const { id } = req.params;
   try {
-    const [rows] = await pool.query('SELECT * FROM Nomina WHERE nomina_id = ?', [id]);
+    const [rows] = await pool.query(
+      `SELECT n.*, s.sucursal_nombre
+       FROM Nomina n
+       JOIN Sucursal s ON s.sucursal_id = n.sucursal_id
+       WHERE n.nomina_id = ?`,
+      [id]
+    );
+
     if (rows.length === 0) {
       return res.status(404).json({ message: 'Nómina no encontrada' });
     }
@@ -33,6 +46,7 @@ exports.getNominaById = async (req, res) => {
   }
 };
 
+// ✅ Crear nómina
 exports.createNomina = async (req, res) => {
   const {
     sucursal_id,
@@ -42,7 +56,7 @@ exports.createNomina = async (req, res) => {
     nomina_periodo_fin,
     nomina_estado,
     total_nomina,
-    observaciones
+    observaciones,
   } = req.body;
 
   const estadoFinal = ['borrador', 'calculada', 'pagada', 'cancelada'].includes(nomina_estado)
@@ -53,8 +67,8 @@ exports.createNomina = async (req, res) => {
     const [result] = await pool.query(
       `INSERT INTO Nomina (
         sucursal_id, usuario_id, nomina_fecha, nomina_periodo_inicio,
-        nomina_periodo_fin, nomina_estado, total_nomina, observaciones)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        nomina_periodo_fin, nomina_estado, total_nomina, observaciones
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         sucursal_id,
         usuario_id || null,
@@ -63,16 +77,24 @@ exports.createNomina = async (req, res) => {
         formatDate(nomina_periodo_fin),
         estadoFinal,
         total_nomina || 0,
-        observaciones || ''
+        observaciones || '',
       ]
     );
-    res.status(201).json({ message: 'Nómina creada', id: result.insertId });
+
+    // 🔄 recalcular total_nomina (en caso de detalles)
+    await actualizarTotalNomina(result.insertId);
+
+    res.status(201).json({
+      message: 'Nómina creada correctamente',
+      id: result.insertId,
+    });
   } catch (err) {
     console.error('Error al crear la nómina:', err);
     res.status(500).json({ message: 'Error al crear la nómina' });
   }
 };
 
+// ✅ Actualizar nómina
 exports.updateNomina = async (req, res) => {
   const { id } = req.params;
   const {
@@ -83,7 +105,7 @@ exports.updateNomina = async (req, res) => {
     nomina_periodo_fin,
     nomina_estado,
     total_nomina,
-    observaciones
+    observaciones,
   } = req.body;
 
   const estadoFinal = ['borrador', 'calculada', 'pagada', 'cancelada'].includes(nomina_estado)
@@ -105,41 +127,72 @@ exports.updateNomina = async (req, res) => {
         estadoFinal,
         total_nomina || 0,
         observaciones || '',
-        id
+        id,
       ]
     );
-    res.json({ message: 'Nómina actualizada' });
+
+    // 🔄 recalcular total
+    await actualizarTotalNomina(id);
+
+    res.json({ message: 'Nómina actualizada correctamente' });
   } catch (err) {
     console.error('Error al actualizar la nómina:', err);
     res.status(500).json({ message: 'Error al actualizar la nómina' });
   }
 };
 
+// ✅ Eliminar nómina
 exports.deleteNomina = async (req, res) => {
   const { id } = req.params;
   try {
     await pool.query('DELETE FROM Nomina WHERE nomina_id = ?', [id]);
-    res.json({ message: 'Nómina eliminada' });
+    res.json({ message: 'Nómina eliminada correctamente' });
   } catch (err) {
     console.error('Error al eliminar la nómina:', err);
     res.status(500).json({ message: 'Error al eliminar la nómina' });
   }
 };
 
+// ✅ Obtener nóminas por sucursal
 exports.getNominasPorSucursal = async (req, res) => {
   const { sucursalId } = req.params;
-  console.log('▶️ getNominasPorSucursal invocado con sucursalId =', sucursalId);
 
   try {
     const [rows] = await pool.query(
-      'SELECT * FROM Nomina WHERE sucursal_id = ?',
+      `SELECT n.*, s.sucursal_nombre
+       FROM Nomina n
+       JOIN Sucursal s ON s.sucursal_id = n.sucursal_id
+       WHERE n.sucursal_id = ?
+       ORDER BY n.nomina_id DESC`,
       [sucursalId]
     );
-    console.log('✅ Query completada, filas obtenidas =', rows.length);
-    return res.status(200).json(rows);
+
+    res.status(200).json(rows);
   } catch (err) {
-    console.error('❌ Error en la query de nóminas:', err);
-    return res.status(500).json({ message: 'Error al obtener las nóminas por sucursal' });
+    console.error('Error al obtener las nóminas por sucursal:', err);
+    res.status(500).json({ message: 'Error al obtener las nóminas por sucursal' });
   }
 };
 
+// ✅ Recalcular total_nomina con base en los detalles
+async function actualizarTotalNomina(nominaId) {
+  try {
+    const [rows] = await pool.query(
+      `SELECT SUM(subtotal) AS total
+       FROM DetalleNomina
+       WHERE nomina_id = ?`,
+      [nominaId]
+    );
+
+    const total = rows[0].total || 0;
+
+    await pool.query(
+      `UPDATE Nomina SET total_nomina = ?, nomina_estado = 'calculada' WHERE nomina_id = ?`,
+      [total, nominaId]
+    );
+
+    console.log(`🔄 Total actualizado para la nómina ${nominaId}: ${total}`);
+  } catch (err) {
+    console.error('Error al actualizar total_nomina:', err);
+  }
+}

@@ -1,24 +1,25 @@
-// src/routes/nomina.routes.js
 const express = require('express');
 const router = express.Router();
 const nominaController = require('../controllers/nomina.controller');
+const detalleNominaController = require('../controllers/detalleNomina.controller');
+const { idParam } = require('../validators/detalleNomina.validators');
 
-// Crear nueva nómina
+// 🔹 Obtener todas las nóminas de una sucursal
+router.get('/sucursal/:sucursalId', idParam('sucursalId'), nominaController.getNominasPorSucursal);
+
+// 🔹 Obtener una nómina por su ID
+router.get('/:id', idParam('id'), nominaController.getNominaById);
+
+// 🔹 Crear una nueva nómina
 router.post('/', nominaController.createNomina);
 
-// Obtener todas las nóminas
-router.get('/', nominaController.getAllNominas);
+// 🔹 Actualizar una nómina
+router.put('/:id', idParam('id'), nominaController.updateNomina);
 
-// Obtener nóminas por sucursal (⚠️ importante que esté antes del getById)
-router.get('/sucursal/:sucursalId', nominaController.getNominasPorSucursal);
+// 🔹 Eliminar una nómina
+router.delete('/:id', idParam('id'), nominaController.deleteNomina);
 
-// Obtener nómina por ID
-router.get('/:id', nominaController.getNominaById);
-
-// Actualizar nómina por ID
-router.put('/:id', nominaController.updateNomina);
-
-// Eliminar nómina por ID
-router.delete('/:id', nominaController.deleteNomina);
+// 🔹 Obtener detalles de nómina (ruta espejo)
+router.get('/:nominaId/detalles', idParam('nominaId'), detalleNominaController.listByNomina);
 
 module.exports = router;
