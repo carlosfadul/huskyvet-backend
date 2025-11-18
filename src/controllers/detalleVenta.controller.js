@@ -93,3 +93,24 @@ exports.deleteDetalleVenta = async (req, res) => {
         res.status(500).json({ message: 'Error al eliminar el detalle de venta' });
     }
 };
+
+exports.getByVentaId = async (req, res) => {
+  const { ventaId } = req.params;
+
+  try {
+    const [rows] = await db.query(
+      `SELECT dv.*, 
+              p.nombre_producto,
+              p.precioVenta_producto
+       FROM DetalleVenta dv
+       JOIN Producto p ON dv.producto_id = p.producto_id
+       WHERE dv.venta_id = ?`,
+      [ventaId]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error('Error al obtener detalles de la venta:', err);
+    res.status(500).json({ message: 'Error al obtener detalles de la venta' });
+  }
+};

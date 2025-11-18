@@ -139,7 +139,11 @@ app.use(`${API}/detalle-remision`, detalleRemisionRoutes);
 app.use(`${API}/detalle-nomina`, detalleNominaRoutes);
 
 // 🔹 Ruta espejo requerida por el frontend Angular
-app.get(`${API}/nominas/:nominaId/detalles`, idParam('nominaId'), detalleNominaController.listByNomina);
+app.get(
+  `${API}/nominas/:nominaId/detalles`,
+  idParam('nominaId'),
+  detalleNominaController.listByNomina
+);
 
 // ====== Auth ======
 app.use(`${API}/auth`, authRoutes);
@@ -171,3 +175,4 @@ app.use((err, req, res, _next) => {
 });
 
 module.exports = app;
+
