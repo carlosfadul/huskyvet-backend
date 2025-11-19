@@ -1,79 +1,77 @@
 const db = require('../database');
 
-// Obtener todos los servicios
-const getServicios = async (req, res) => {
+// GET /api/servicios
+exports.getServicios = async (_req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM Servicio');
+    const [rows] = await db.query('SELECT * FROM Servicio ORDER BY servicio_id DESC');
     res.json(rows);
   } catch (error) {
     console.error('Error al obtener servicios:', error);
-    res.status(500).json({ error: 'Error al obtener servicios' });
+    res.status(500).json({ message: 'Error al obtener servicios' });
   }
 };
 
-// Obtener servicio por ID
-const getServicioById = async (req, res) => {
+// GET /api/servicios/:id
+exports.getServicioById = async (req, res) => {
   const { id } = req.params;
   try {
     const [rows] = await db.query('SELECT * FROM Servicio WHERE servicio_id = ?', [id]);
-    if (rows.length === 0) return res.status(404).json({ message: 'Servicio no encontrado' });
+    if (!rows.length) {
+      return res.status(404).json({ message: 'Servicio no encontrado' });
+    }
     res.json(rows[0]);
   } catch (error) {
     console.error('Error al obtener servicio:', error);
-    res.status(500).json({ error: 'Error al obtener servicio' });
+    res.status(500).json({ message: 'Error al obtener servicio' });
   }
 };
 
-// Crear servicio
-const createServicio = async (req, res) => {
-  const { servicio_nombre, servicio_tipo, servicio_detalle, servicio_precio, servicio_duracion, servicio_estado } = req.body;
+// POST /api/servicios
+exports.createServicio = async (req, res) => {
+  const data = req.body;
+
   try {
-    const [result] = await db.query(
-      `INSERT INTO Servicio (servicio_nombre, servicio_tipo, servicio_detalle, servicio_precio, servicio_duracion, servicio_estado)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [servicio_nombre, servicio_tipo, servicio_detalle, servicio_precio, servicio_duracion, servicio_estado || 'activo']
-    );
-    res.status(201).json({ message: 'Servicio creado', servicio_id: result.insertId });
+    const [result] = await db.query('INSERT INTO Servicio SET ?', [data]);
+    res.status(201).json({ message: 'Servicio creado', id: result.insertId });
   } catch (error) {
     console.error('Error al crear servicio:', error);
-    res.status(500).json({ error: 'Error al crear servicio' });
+    res.status(500).json({ message: 'Error al crear servicio' });
   }
 };
 
-// Actualizar servicio
-const updateServicio = async (req, res) => {
+// PUT /api/servicios/:id
+exports.updateServicio = async (req, res) => {
   const { id } = req.params;
-  const { servicio_nombre, servicio_tipo, servicio_detalle, servicio_precio, servicio_duracion, servicio_estado } = req.body;
+  const data = req.body;
+
   try {
-    await db.query(
-      `UPDATE Servicio SET servicio_nombre = ?, servicio_tipo = ?, servicio_detalle = ?, 
-       servicio_precio = ?, servicio_duracion = ?, servicio_estado = ?
-       WHERE servicio_id = ?`,
-      [servicio_nombre, servicio_tipo, servicio_detalle, servicio_precio, servicio_duracion, servicio_estado, id]
-    );
+    const [result] = await db.query('UPDATE Servicio SET ? WHERE servicio_id = ?', [data, id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Servicio no encontrado' });
+    }
+
     res.json({ message: 'Servicio actualizado' });
   } catch (error) {
     console.error('Error al actualizar servicio:', error);
-    res.status(500).json({ error: 'Error al actualizar servicio' });
+    res.status(500).json({ message: 'Error al actualizar servicio' });
   }
 };
 
-// Eliminar servicio
-const deleteServicio = async (req, res) => {
+// DELETE /api/servicios/:id
+exports.deleteServicio = async (req, res) => {
   const { id } = req.params;
+
   try {
-    await db.query('DELETE FROM Servicio WHERE servicio_id = ?', [id]);
+    const [result] = await db.query('DELETE FROM Servicio WHERE servicio_id = ?', [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Servicio no encontrado' });
+    }
+
     res.json({ message: 'Servicio eliminado' });
   } catch (error) {
     console.error('Error al eliminar servicio:', error);
-    res.status(500).json({ error: 'Error al eliminar servicio' });
+    res.status(500).json({ message: 'Error al eliminar servicio' });
   }
-};
-
-module.exports = {
-  getServicios,
-  getServicioById,
-  createServicio,
-  updateServicio,
-  deleteServicio
 };

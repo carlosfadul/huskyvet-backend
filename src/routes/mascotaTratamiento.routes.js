@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const controller = require('../controllers/mascotaTratamiento.controller');
+const mascotaTratamientoController = require('../controllers/mascotaTratamiento.controller');
 
-router.post('/', controller.createMascotaTratamiento);
-router.get('/', controller.getMascotaTratamientos);
-router.get('/:id', controller.getMascotaTratamientoById);
-router.put('/:id', controller.updateMascotaTratamiento);
-router.delete('/:id', controller.deleteMascotaTratamiento);
+// Listar por mascota
+router.get('/mascota/:mascotaId', mascotaTratamientoController.getPorMascota);
+
+// CRUD básico
+router.get('/:id', mascotaTratamientoController.getById);
+router.post('/', mascotaTratamientoController.createMascotaTratamiento);
+router.put('/:id', mascotaTratamientoController.updateMascotaTratamiento);
+router.delete('/:id', mascotaTratamientoController.deleteMascotaTratamiento);
 
 module.exports = router;

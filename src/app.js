@@ -100,42 +100,48 @@ if (swaggerSpec && Object.keys(swaggerSpec).length) {
 }
 
 // ====== Rutas principales ======
-app.use(`${API}/vacunas`, vacunaRoutes);
+
+// Configuración general
 app.use(`${API}/veterinarias`, veterinariaRoutes);
 app.use(`${API}/sucursales`, sucursalRoutes);
-app.use(`${API}/proveedores`, proveedorRoutes);
-app.use(`${API}/servicios`, servicioRoutes);
-app.use(`${API}/enfermedades`, enfermedadRoutes);
-app.use(`${API}/tratamientos`, tratamientoRoutes);
-app.use(`${API}/aliados`, aliadoRoutes);
+app.use(`${API}/configuracion`, configuracionRoutes);
+app.use(`${API}/usuarios`, usuarioRoutes);
+app.use(`${API}/empleados`, empleadoRoutes);
+app.use(`${API}/auditoria`, auditoriaRoutes);
+
+// Clínica: clientes / mascotas / clínica
 app.use(`${API}/clientes`, clienteRoutes);
 app.use(`${API}/mascotas`, mascotaRoutes);
-app.use(`${API}/productos`, productoRoutes);
+app.use(`${API}/atenciones`, atencionRoutes);
+app.use(`${API}/detalle-atencion`, detalleAtencionRoutes);
+app.use(`${API}/enfermedades`, enfermedadRoutes);
 app.use(`${API}/mascota-enfermedad`, mascotaEnfermedadRoutes);
+app.use(`${API}/tratamientos`, tratamientoRoutes);
+app.use(`${API}/mascota-tratamiento`, mascotaTratamientoRoutes);
+app.use(`${API}/vacunas`, vacunaRoutes);
+app.use(`${API}/aplicacion-vacuna`, aplicacionVacunaRoutes);
 app.use(`${API}/desparasitantes`, desparasitanteRoutes);
 app.use(`${API}/aplicacion-desparasitante`, aplicacionDesparasitanteRoutes);
-app.use(`${API}/servicio-aliado`, servicioAliadoRoutes);
-app.use(`${API}/empleados`, empleadoRoutes);
-app.use(`${API}/nomina`, nominaRoutes);
-app.use(`${API}/usuarios`, usuarioRoutes);
 app.use(`${API}/citas`, citaRoutes);
-app.use(`${API}/configuracion`, configuracionRoutes);
-app.use(`${API}/auditoria`, auditoriaRoutes);
+app.use(`${API}/remisiones`, remisionRoutes);
+app.use(`${API}/detalle-remision`, detalleRemisionRoutes);
+app.use(`${API}/servicio-aliado`, servicioAliadoRoutes);
+app.use(`${API}/servicios`, servicioRoutes);
+app.use(`${API}/aliados`, aliadoRoutes);
+
+// Comercial: inventario / ventas / compras / facturación
+app.use(`${API}/proveedores`, proveedorRoutes);
+app.use(`${API}/productos`, productoRoutes);
 app.use(`${API}/movimiento-inventario`, movimientoInventarioRoutes);
-app.use(`${API}/facturas`, facturaRoutes);
-app.use(`${API}/factura-detalle`, facturaDetalleRoutes);
 app.use(`${API}/pedidos`, pedidoRoutes);
 app.use(`${API}/detalle-pedido`, detallePedidoRoutes);
 app.use(`${API}/ventas`, ventaRoutes);
 app.use(`${API}/detalle-venta`, detalleVentaRoutes);
-app.use(`${API}/atenciones`, atencionRoutes);
-app.use(`${API}/detalle-atencion`, detalleAtencionRoutes);
-app.use(`${API}/mascota-tratamiento`, mascotaTratamientoRoutes);
-app.use(`${API}/aplicacion-vacuna`, aplicacionVacunaRoutes);
-app.use(`${API}/remisiones`, remisionRoutes);
-app.use(`${API}/detalle-remision`, detalleRemisionRoutes);
+app.use(`${API}/facturas`, facturaRoutes);
+app.use(`${API}/factura-detalle`, facturaDetalleRoutes);
 
-// ====== Detalle Nómina ======
+// Nómina
+app.use(`${API}/nomina`, nominaRoutes);
 app.use(`${API}/detalle-nomina`, detalleNominaRoutes);
 
 // 🔹 Ruta espejo requerida por el frontend Angular
@@ -145,7 +151,7 @@ app.get(
   detalleNominaController.listByNomina
 );
 
-// ====== Auth ======
+// Auth
 app.use(`${API}/auth`, authRoutes);
 
 // ====== Healthcheck ======
@@ -175,4 +181,3 @@ app.use((err, req, res, _next) => {
 });
 
 module.exports = app;
-

@@ -1,44 +1,27 @@
-// src/controllers/desparasitante.controller.js
 const db = require('../database');
 
+// Crear desparasitante
 exports.createDesparasitante = async (req, res) => {
+  const data = req.body; // asumimos que los nombres de campos coinciden con las columnas
+
   try {
-    const {
-      desparasitante_nombre,
-      desparasitante_laboratorio,
-      desparasitante_detalles,
-      tipo,
-      especie_destinada,
-      edad_minima_semanas,
-      peso_minimo,
-      peso_maximo
-    } = req.body;
-
-    const [result] = await db.promise().query(
-      `INSERT INTO Desparasitante (desparasitante_nombre, desparasitante_laboratorio, desparasitante_detalles, tipo, especie_destinada, edad_minima_semanas, peso_minimo, peso_maximo)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        desparasitante_nombre,
-        desparasitante_laboratorio,
-        desparasitante_detalles,
-        tipo,
-        especie_destinada,
-        edad_minima_semanas,
-        peso_minimo,
-        peso_maximo
-      ]
-    );
-
-    res.status(201).json({ message: 'Desparasitante creado', id: result.insertId });
+    const [result] = await db.query('INSERT INTO Desparasitante SET ?', [data]);
+    res.status(201).json({
+      message: 'Desparasitante creado',
+      id: result.insertId
+    });
   } catch (error) {
     console.error('Error al crear desparasitante:', error);
     res.status(500).json({ message: 'Error al crear desparasitante' });
   }
 };
 
-exports.getDesparasitantes = async (req, res) => {
+// Obtener todos los desparasitantes
+exports.getDesparasitantes = async (_req, res) => {
   try {
-    const [rows] = await db.promise().query('SELECT * FROM Desparasitante');
+    const [rows] = await db.query(
+      'SELECT * FROM Desparasitante ORDER BY desparasitante_id DESC'
+    );
     res.json(rows);
   } catch (error) {
     console.error('Error al obtener desparasitantes:', error);
@@ -46,11 +29,20 @@ exports.getDesparasitantes = async (req, res) => {
   }
 };
 
+// Obtener un desparasitante por ID
 exports.getDesparasitanteById = async (req, res) => {
+  const { id } = req.params;
+
   try {
-    const { id } = req.params;
-    const [rows] = await db.promise().query('SELECT * FROM Desparasitante WHERE desparasitante_id = ?', [id]);
-    if (rows.length === 0) return res.status(404).json({ message: 'Desparasitante no encontrado' });
+    const [rows] = await db.query(
+      'SELECT * FROM Desparasitante WHERE desparasitante_id = ?',
+      [id]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ message: 'Desparasitante no encontrado' });
+    }
+
     res.json(rows[0]);
   } catch (error) {
     console.error('Error al obtener desparasitante:', error);
@@ -58,35 +50,20 @@ exports.getDesparasitanteById = async (req, res) => {
   }
 };
 
+// Actualizar desparasitante
 exports.updateDesparasitante = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const {
-      desparasitante_nombre,
-      desparasitante_laboratorio,
-      desparasitante_detalles,
-      tipo,
-      especie_destinada,
-      edad_minima_semanas,
-      peso_minimo,
-      peso_maximo
-    } = req.body;
+  const { id } = req.params;
+  const data = req.body;
 
-    await db.promise().query(
-      `UPDATE Desparasitante SET desparasitante_nombre=?, desparasitante_laboratorio=?, desparasitante_detalles=?, tipo=?, especie_destinada=?, edad_minima_semanas=?, peso_minimo=?, peso_maximo=?
-       WHERE desparasitante_id=?`,
-      [
-        desparasitante_nombre,
-        desparasitante_laboratorio,
-        desparasitante_detalles,
-        tipo,
-        especie_destinada,
-        edad_minima_semanas,
-        peso_minimo,
-        peso_maximo,
-        id
-      ]
+  try {
+    const [result] = await db.query(
+      'UPDATE Desparasitante SET ? WHERE desparasitante_id = ?',
+      [data, id]
     );
+
+    if (!result.affectedRows) {
+      return res.status(404).json({ message: 'Desparasitante no encontrado' });
+    }
 
     res.json({ message: 'Desparasitante actualizado' });
   } catch (error) {
@@ -95,10 +72,20 @@ exports.updateDesparasitante = async (req, res) => {
   }
 };
 
+// Eliminar desparasitante
 exports.deleteDesparasitante = async (req, res) => {
+  const { id } = req.params;
+
   try {
-    const { id } = req.params;
-    await db.promise().query('DELETE FROM Desparasitante WHERE desparasitante_id = ?', [id]);
+    const [result] = await db.query(
+      'DELETE FROM Desparasitante WHERE desparasitante_id = ?',
+      [id]
+    );
+
+    if (!result.affectedRows) {
+      return res.status(404).json({ message: 'Desparasitante no encontrado' });
+    }
+
     res.json({ message: 'Desparasitante eliminado' });
   } catch (error) {
     console.error('Error al eliminar desparasitante:', error);

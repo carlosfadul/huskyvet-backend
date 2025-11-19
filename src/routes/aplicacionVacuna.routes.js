@@ -2,10 +2,14 @@ const express = require('express');
 const router = express.Router();
 const aplicacionVacunaController = require('../controllers/aplicacionVacuna.controller');
 
-router.get('/', aplicacionVacunaController.getAplicacionesVacuna);
-router.get('/:id', aplicacionVacunaController.getAplicacionVacunaById);
-router.post('/', aplicacionVacunaController.createAplicacionVacuna);
-router.put('/:id', aplicacionVacunaController.updateAplicacionVacuna);
-router.delete('/:id', aplicacionVacunaController.deleteAplicacionVacuna);
+// CRUD básico
+router.post('/', aplicacionVacunaController.createAplicacion);
+router.get('/', aplicacionVacunaController.getAplicaciones);
+router.get('/:id', aplicacionVacunaController.getAplicacionById);
+router.put('/:id', aplicacionVacunaController.updateAplicacion);
+router.delete('/:id', aplicacionVacunaController.deleteAplicacion);
+
+// 👉 Ruta para el detalle de la mascota
+router.get('/mascota/:mascotaId', aplicacionVacunaController.getAplicacionesPorMascota);
 
 module.exports = router;

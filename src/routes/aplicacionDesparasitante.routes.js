@@ -1,12 +1,15 @@
-// src/routes/aplicacionDesparasitante.routes.js
 const express = require('express');
 const router = express.Router();
-const aplicacionController = require('../controllers/aplicacionDesparasitante.controller');
+const aplicacionDesparasitanteController = require('../controllers/aplicacionDesparasitante.controller');
 
-router.post('/', aplicacionController.createAplicacion);
-router.get('/', aplicacionController.getAplicaciones);
-router.get('/:id', aplicacionController.getAplicacionById);
-router.put('/:id', aplicacionController.updateAplicacion);
-router.delete('/:id', aplicacionController.deleteAplicacion);
+// CRUD
+router.post('/', aplicacionDesparasitanteController.createAplicacion);
+router.get('/', aplicacionDesparasitanteController.getAplicaciones);
+router.get('/:id', aplicacionDesparasitanteController.getAplicacionById);
+router.put('/:id', aplicacionDesparasitanteController.updateAplicacion);
+router.delete('/:id', aplicacionDesparasitanteController.deleteAplicacion);
+
+// 👉 Ruta por mascota (la que usa Angular)
+router.get('/mascota/:mascotaId', aplicacionDesparasitanteController.getAplicacionesPorMascota);
 
 module.exports = router;

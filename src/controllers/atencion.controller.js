@@ -22,7 +22,19 @@ exports.createAtencion = async (req, res) => {
       `INSERT INTO Atencion 
       (mascota_id, servicio_id, usuario_id, atencion_cantidad, atencion_precio, atencion_detalle, atencion_archivoAdjunto, atencion_estado, diagnostico, tratamiento, observaciones)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [mascota_id, servicio_id, usuario_id, atencion_cantidad, atencion_precio, atencion_detalle, archivoAdjunto, atencion_estado, diagnostico, tratamiento, observaciones]
+      [
+        mascota_id,
+        servicio_id,
+        usuario_id,
+        atencion_cantidad,
+        atencion_precio,
+        atencion_detalle,
+        archivoAdjunto,
+        atencion_estado,
+        diagnostico,
+        tratamiento,
+        observaciones
+      ]
     );
     res.status(201).json({ message: 'Atención creada', id: result.insertId });
   } catch (error) {
@@ -38,6 +50,26 @@ exports.getAtenciones = async (req, res) => {
   } catch (error) {
     console.error('Error al obtener atenciones:', error);
     res.status(500).json({ message: 'Error al obtener atenciones' });
+  }
+};
+
+// 🔹 NUEVO: obtener atenciones por mascota
+exports.getAtencionesByMascota = async (req, res) => {
+  const { mascotaId } = req.params;
+
+  try {
+    const [rows] = await db.query(
+      `SELECT a.*
+       FROM Atencion a
+       WHERE a.mascota_id = ? 
+       ORDER BY a.atencion_id DESC`,
+      [mascotaId]
+    );
+
+    res.json(rows);
+  } catch (error) {
+    console.error('Error al obtener atenciones por mascota:', error);
+    res.status(500).json({ message: 'Error al obtener atenciones por mascota' });
   }
 };
 
