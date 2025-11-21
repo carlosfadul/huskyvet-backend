@@ -1,12 +1,10 @@
-// src/routes/servicioAliado.routes.js
 const express = require('express');
 const router = express.Router();
-const servicioAliadoController = require('../controllers/servicioAliado.controller');
+const servicioAliadoCtrl = require('../controllers/servicioAliado.controller');
 
-router.post('/', servicioAliadoController.createServicioAliado);
-router.get('/', servicioAliadoController.getServiciosAliado);
-router.get('/:id', servicioAliadoController.getServicioAliadoById);
-router.put('/:id', servicioAliadoController.updateServicioAliado);
-router.delete('/:id', servicioAliadoController.deleteServicioAliado);
+router.get('/:aliadoId', servicioAliadoCtrl.getByAliado);
+router.post('/', servicioAliadoCtrl.create);
+router.put('/:id', servicioAliadoCtrl.update);
+router.delete('/:id', servicioAliadoCtrl.delete);
 
 module.exports = router;

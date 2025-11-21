@@ -1,96 +1,95 @@
-// src/controllers/cita.controller.js
 const db = require('../database');
 
-// Obtener todas las citas
-exports.getCitas = async (req, res) => {
+// ==================== LISTAR POR MASCOTA ====================
+exports.getByMascota = async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM Cita');
-    res.status(200).json(rows);
-  } catch (error) {
-    console.error('Error al obtener citas:', error);
-    res.status(500).json({ message: 'Error al obtener citas' });
+    const { mascota_id } = req.params;
+
+    const [rows] = await db.query(
+      `SELECT c.*, s.servicio_nombre, u.usuario_username
+       FROM Cita c
+       JOIN Servicio s ON s.servicio_id = c.servicio_id
+       LEFT JOIN Usuario u ON u.usuario_id = c.usuario_id
+       WHERE c.mascota_id = ?
+       ORDER BY c.cita_fecha DESC`,
+      [mascota_id]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Error get citas mascota:", err);
+    res.status(500).json({ message: "Error al obtener citas" });
   }
 };
 
-// Obtener cita por ID
-exports.getCitaById = async (req, res) => {
+// ==================== CREAR ====================
+exports.create = async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM Cita WHERE cita_id = ?', [req.params.id]);
-    if (rows.length === 0) {
-      return res.status(404).json({ message: 'Cita no encontrada' });
-    }
-    res.status(200).json(rows[0]);
-  } catch (error) {
-    console.error('Error al obtener la cita:', error);
-    res.status(500).json({ message: 'Error al obtener la cita' });
-  }
-};
+    const data = req.body;
 
-// Crear nueva cita
-exports.createCita = async (req, res) => {
-  const {
-    mascota_id,
-    servicio_id,
-    usuario_id,
-    sucursal_id,
-    cita_fecha,
-    cita_duracion,
-    cita_estado,
-    cita_motivo,
-    cita_observaciones
-  } = req.body;
-
-  try {
     const [result] = await db.query(
-      `INSERT INTO Cita (mascota_id, servicio_id, usuario_id, sucursal_id, cita_fecha, cita_duracion, cita_estado, cita_motivo, cita_observaciones)
+      `INSERT INTO Cita
+       (mascota_id, servicio_id, usuario_id, sucursal_id, cita_fecha, cita_duracion, cita_estado, cita_motivo, cita_observaciones)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [mascota_id, servicio_id, usuario_id || null, sucursal_id, cita_fecha, cita_duracion, cita_estado || 'pendiente', cita_motivo, cita_observaciones]
+      [
+        data.mascota_id,
+        data.servicio_id,
+        data.usuario_id || null,
+        data.sucursal_id,
+        data.cita_fecha,
+        data.cita_duracion,
+        data.cita_estado || 'pendiente',
+        data.cita_motivo || null,
+        data.cita_observaciones || null
+      ]
     );
-    res.status(201).json({ message: 'Cita creada exitosamente', cita_id: result.insertId });
-  } catch (error) {
-    console.error('Error al crear la cita:', error);
-    res.status(500).json({ message: 'Error al crear la cita' });
+
+    res.json({ id: result.insertId });
+  } catch (err) {
+    console.error("Error crear cita:", err);
+    res.status(500).json({ message: "Error al crear cita" });
   }
 };
 
-// Actualizar cita
-exports.updateCita = async (req, res) => {
-  const { id } = req.params;
-  const {
-    mascota_id,
-    servicio_id,
-    usuario_id,
-    sucursal_id,
-    cita_fecha,
-    cita_duracion,
-    cita_estado,
-    cita_motivo,
-    cita_observaciones
-  } = req.body;
-
+// ==================== ACTUALIZAR ====================
+exports.update = async (req, res) => {
   try {
-    const [result] = await db.query(
-      `UPDATE Cita SET mascota_id = ?, servicio_id = ?, usuario_id = ?, sucursal_id = ?, cita_fecha = ?, cita_duracion = ?, cita_estado = ?, cita_motivo = ?, cita_observaciones = ?
+    const { id } = req.params;
+    const data = req.body;
+
+    await db.query(
+      `UPDATE Cita SET 
+       servicio_id=?, usuario_id=?, cita_fecha=?, cita_duracion=?, cita_estado=?, cita_motivo=?, cita_observaciones=?
        WHERE cita_id = ?`,
-      [mascota_id, servicio_id, usuario_id || null, sucursal_id, cita_fecha, cita_duracion, cita_estado, cita_motivo, cita_observaciones, id]
+      [
+        data.servicio_id,
+        data.usuario_id || null,
+        data.cita_fecha,
+        data.cita_duracion,
+        data.cita_estado,
+        data.cita_motivo,
+        data.cita_observaciones,
+        id
+      ]
     );
-    res.status(200).json({ message: 'Cita actualizada exitosamente' });
-  } catch (error) {
-    console.error('Error al actualizar la cita:', error);
-    res.status(500).json({ message: 'Error al actualizar la cita' });
+
+    res.json({ message: "Cita actualizada" });
+  } catch (err) {
+    console.error("Error actualizar cita:", err);
+    res.status(500).json({ message: "Error al actualizar cita" });
   }
 };
 
-// Eliminar cita
-exports.deleteCita = async (req, res) => {
+// ==================== ELIMINAR ====================
+exports.delete = async (req, res) => {
   try {
-    const [result] = await db.query('DELETE FROM Cita WHERE cita_id = ?', [req.params.id]);
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Cita no encontrada' });
-    }
-    res.status(200).json({ message: 'Cita eliminada exitosamente' });
-  } catch (error) {
-    console.error('Error al eliminar la cita:', error);
-    res.status(500).json({ message: 'Error al eliminar la cita' });
+    const { id } = req.params;
+
+    await db.query(`DELETE FROM Cita WHERE cita_id = ?`, [id]);
+
+    res.json({ message: "Cita eliminada" });
+  } catch (err) {
+    console.error("Error eliminar cita:", err);
+    res.status(500).json({ message: "Error al eliminar cita" });
   }
 };

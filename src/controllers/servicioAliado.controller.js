@@ -1,82 +1,67 @@
-// src/controllers/servicioAliado.controller.js
 const db = require('../database');
 
-exports.createServicioAliado = async (req, res) => {
+exports.getByAliado = async (req, res) => {
   try {
-    const {
-      aliado_id,
-      nombre_servicioAliado,
-      detalle_servicioAliado,
-      precio_servicio,
-      servicio_estado
-    } = req.body;
+    const { aliadoId } = req.params;
+    const [rows] = await db.query(
+      "SELECT * FROM ServicioAliado WHERE aliado_id = ? ORDER BY fecha_creacion DESC",
+      [aliadoId]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("Error obteniendo servicios del aliado", err);
+    res.status(500).json({ error: "Error al obtener servicios" });
+  }
+};
 
-    const [result] = await db.promise().query(
-      `INSERT INTO ServicioAliado (aliado_id, nombre_servicioAliado, detalle_servicioAliado, precio_servicio, servicio_estado)
-       VALUES (?, ?, ?, ?, ?)`,
+exports.create = async (req, res) => {
+  try {
+    const { aliado_id, nombre_servicioAliado, detalle_servicioAliado, precio_servicio, servicio_estado } = req.body;
+
+    await db.query(
+      `INSERT INTO ServicioAliado (
+          aliado_id, nombre_servicioAliado, detalle_servicioAliado,
+          precio_servicio, servicio_estado
+      ) VALUES (?, ?, ?, ?, ?)`,
       [aliado_id, nombre_servicioAliado, detalle_servicioAliado, precio_servicio, servicio_estado]
     );
 
-    res.status(201).json({ message: 'ServicioAliado creado', id: result.insertId });
-  } catch (error) {
-    console.error('Error al crear ServicioAliado:', error);
-    res.status(500).json({ message: 'Error al crear el servicio aliado', error });
+    res.json({ message: "Servicio creado correctamente" });
+  } catch (err) {
+    console.error("Error creando servicio del aliado", err);
+    res.status(500).json({ error: "Error al crear servicio" });
   }
 };
 
-exports.getServiciosAliado = async (req, res) => {
+exports.update = async (req, res) => {
   try {
-    const [rows] = await db.promise().query('SELECT * FROM ServicioAliado');
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener servicios:', error);
-    res.status(500).json({ message: 'Error al obtener los servicios' });
-  }
-};
+    const { id } = req.params;
+    const { nombre_servicioAliado, detalle_servicioAliado, precio_servicio, servicio_estado } = req.body;
 
-exports.getServicioAliadoById = async (req, res) => {
-  try {
-    const [rows] = await db.promise().query('SELECT * FROM ServicioAliado WHERE servicioAliado_id = ?', [req.params.id]);
-
-    if (rows.length === 0) {
-      return res.status(404).json({ message: 'Servicio no encontrado' });
-    }
-
-    res.json(rows[0]);
-  } catch (error) {
-    console.error('Error al obtener servicio por ID:', error);
-    res.status(500).json({ message: 'Error al obtener el servicio' });
-  }
-};
-
-exports.updateServicioAliado = async (req, res) => {
-  try {
-    const {
-      aliado_id,
-      nombre_servicioAliado,
-      detalle_servicioAliado,
-      precio_servicio,
-      servicio_estado
-    } = req.body;
-
-    await db.promise().query(
-      `UPDATE ServicioAliado SET aliado_id=?, nombre_servicioAliado=?, detalle_servicioAliado=?, precio_servicio=?, servicio_estado=? WHERE servicioAliado_id=?`,
-      [aliado_id, nombre_servicioAliado, detalle_servicioAliado, precio_servicio, servicio_estado, req.params.id]
+    await db.query(
+      `UPDATE ServicioAliado SET
+        nombre_servicioAliado = ?, detalle_servicioAliado = ?, 
+        precio_servicio = ?, servicio_estado = ?
+      WHERE servicioAliado_id = ?`,
+      [nombre_servicioAliado, detalle_servicioAliado, precio_servicio, servicio_estado, id]
     );
 
-    res.json({ message: 'ServicioAliado actualizado' });
-  } catch (error) {
-    console.error('Error al actualizar servicio:', error);
-    res.status(500).json({ message: 'Error al actualizar el servicio' });
+    res.json({ message: "Servicio actualizado" });
+  } catch (err) {
+    console.error("Error actualizando servicio del aliado", err);
+    res.status(500).json({ error: "Error al actualizar servicio" });
   }
 };
 
-exports.deleteServicioAliado = async (req, res) => {
+exports.delete = async (req, res) => {
   try {
-    await db.promise().query('DELETE FROM ServicioAliado WHERE servicioAliado_id = ?', [req.params.id]);
-    res.json({ message: 'ServicioAliado eliminado' });
-  } catch (error) {
-    console.error('Error al eliminar servicio:', error);
-    res.status(500).json({ message: 'Error al eliminar el servicio' });
+    await db.query("DELETE FROM ServicioAliado WHERE servicioAliado_id = ?", [
+      req.params.id,
+    ]);
+
+    res.json({ message: "Servicio eliminado" });
+  } catch (err) {
+    console.error("Error eliminando servicio", err);
+    res.status(500).json({ error: "Error al eliminar servicio" });
   }
 };
