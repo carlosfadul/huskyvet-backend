@@ -1,13 +1,15 @@
 const db = require('../database');
-const fs = require('fs');
 
+// Crear atención
 exports.createAtencion = async (req, res) => {
   const {
     mascota_id,
     servicio_id,
     usuario_id,
+    atencion_fecha,       // 👈 viene del frontend (YYYY-MM-DD HH:MM:SS)
     atencion_cantidad,
     atencion_precio,
+    atencion_motivo,      // 👈 nuevo campo
     atencion_detalle,
     atencion_estado,
     diagnostico,
@@ -15,27 +17,44 @@ exports.createAtencion = async (req, res) => {
     observaciones
   } = req.body;
 
+  // archivo enviado en el campo "archivo"
   const archivoAdjunto = req.file ? req.file.buffer : null;
 
   try {
     const [result] = await db.query(
-      `INSERT INTO Atencion 
-      (mascota_id, servicio_id, usuario_id, atencion_cantidad, atencion_precio, atencion_detalle, atencion_archivoAdjunto, atencion_estado, diagnostico, tratamiento, observaciones)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO Atencion (
+         mascota_id,
+         servicio_id,
+         usuario_id,
+         atencion_fecha,
+         atencion_cantidad,
+         atencion_precio,
+         atencion_motivo,
+         atencion_detalle,
+         atencion_archivoAdjunto,
+         atencion_estado,
+         diagnostico,
+         tratamiento,
+         observaciones
+       )
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         mascota_id,
         servicio_id,
-        usuario_id,
+        usuario_id || null,
+        atencion_fecha,             // si viene null, MySQL usará CURRENT_TIMESTAMP si así lo defines
         atencion_cantidad,
         atencion_precio,
-        atencion_detalle,
+        atencion_motivo || null,
+        atencion_detalle || null,
         archivoAdjunto,
-        atencion_estado,
-        diagnostico,
-        tratamiento,
-        observaciones
+        atencion_estado || 'pendiente',
+        diagnostico || null,
+        tratamiento || null,
+        observaciones || null
       ]
     );
+
     res.status(201).json({ message: 'Atención creada', id: result.insertId });
   } catch (error) {
     console.error('Error al crear atención:', error);
@@ -43,6 +62,7 @@ exports.createAtencion = async (req, res) => {
   }
 };
 
+// Obtener todas las atenciones
 exports.getAtenciones = async (req, res) => {
   try {
     const [rows] = await db.query('SELECT * FROM Atencion');
@@ -53,7 +73,7 @@ exports.getAtenciones = async (req, res) => {
   }
 };
 
-// 🔹 NUEVO: obtener atenciones por mascota
+// Obtener atenciones por mascota
 exports.getAtencionesByMascota = async (req, res) => {
   const { mascotaId } = req.params;
 
@@ -61,8 +81,8 @@ exports.getAtencionesByMascota = async (req, res) => {
     const [rows] = await db.query(
       `SELECT a.*
        FROM Atencion a
-       WHERE a.mascota_id = ? 
-       ORDER BY a.atencion_id DESC`,
+       WHERE a.mascota_id = ?
+       ORDER BY a.atencion_fecha DESC, a.atencion_id DESC`,
       [mascotaId]
     );
 
@@ -73,13 +93,19 @@ exports.getAtencionesByMascota = async (req, res) => {
   }
 };
 
+// Obtener una atención por ID
 exports.getAtencionById = async (req, res) => {
   const { id } = req.params;
   try {
-    const [rows] = await db.query('SELECT * FROM Atencion WHERE atencion_id = ?', [id]);
+    const [rows] = await db.query(
+      'SELECT * FROM Atencion WHERE atencion_id = ?',
+      [id]
+    );
+
     if (rows.length === 0) {
       return res.status(404).json({ message: 'Atención no encontrada' });
     }
+
     res.json(rows[0]);
   } catch (error) {
     console.error('Error al obtener atención por ID:', error);
@@ -87,14 +113,18 @@ exports.getAtencionById = async (req, res) => {
   }
 };
 
+// Actualizar atención
 exports.updateAtencion = async (req, res) => {
   const { id } = req.params;
+
   const {
     mascota_id,
     servicio_id,
     usuario_id,
+    atencion_fecha,       // 👈 también actualizable
     atencion_cantidad,
     atencion_precio,
+    atencion_motivo,      // 👈 nuevo
     atencion_detalle,
     atencion_estado,
     diagnostico,
@@ -106,34 +136,40 @@ exports.updateAtencion = async (req, res) => {
 
   try {
     const query = `
-      UPDATE Atencion SET 
-        mascota_id = ?, 
-        servicio_id = ?, 
-        usuario_id = ?, 
-        atencion_cantidad = ?, 
-        atencion_precio = ?, 
-        atencion_detalle = ?, 
-        atencion_archivoAdjunto = IFNULL(?, atencion_archivoAdjunto), 
-        atencion_estado = ?, 
-        diagnostico = ?, 
-        tratamiento = ?, 
+      UPDATE Atencion SET
+        mascota_id = ?,
+        servicio_id = ?,
+        usuario_id = ?,
+        atencion_fecha = ?,
+        atencion_cantidad = ?,
+        atencion_precio = ?,
+        atencion_motivo = ?,
+        atencion_detalle = ?,
+        atencion_archivoAdjunto = IFNULL(?, atencion_archivoAdjunto),
+        atencion_estado = ?,
+        diagnostico = ?,
+        tratamiento = ?,
         observaciones = ?
       WHERE atencion_id = ?
     `;
+
     await db.query(query, [
       mascota_id,
       servicio_id,
-      usuario_id,
+      usuario_id || null,
+      atencion_fecha,
       atencion_cantidad,
       atencion_precio,
-      atencion_detalle,
+      atencion_motivo || null,
+      atencion_detalle || null,
       archivoAdjunto,
-      atencion_estado,
-      diagnostico,
-      tratamiento,
-      observaciones,
+      atencion_estado || 'pendiente',
+      diagnostico || null,
+      tratamiento || null,
+      observaciones || null,
       id
     ]);
+
     res.json({ message: 'Atención actualizada' });
   } catch (error) {
     console.error('Error al actualizar atención:', error);
@@ -141,6 +177,7 @@ exports.updateAtencion = async (req, res) => {
   }
 };
 
+// Eliminar atención
 exports.deleteAtencion = async (req, res) => {
   const { id } = req.params;
   try {
